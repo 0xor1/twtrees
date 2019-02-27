@@ -115,6 +115,7 @@ func (r *twReqMaker) do(method, path string, body *j.Json) *j.Json {
 	req, e := http.NewRequest(method, r.inst+path, re)
 	panicIf(e)
 	req.SetBasicAuth(r.user, r.pwd)
+	req.Header.Set("twProjectsVer", "twtrees")
 	resp, e := http.DefaultClient.Do(req)
 	panicIf(e)
 	if resp != nil && resp.Body != nil {
