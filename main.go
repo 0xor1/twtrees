@@ -49,23 +49,23 @@ func main() {
 	}
 
 	fmt.Println("get my id")
-	myId := rm.get("/me.json", nil).Int64("person", "id")
+	myId := rm.get("/me.json", nil).MustInt64("person", "id")
 	fmt.Println("myId =", myId)
 
 	fmt.Println("create project")
-	pj := j.PFromString(`{"project":{}}`)
-	pj.Get("project").Set(projectName, "name").Set(int64Str(myId), "people").Set(true, "use-tasks")
-	projectId := rm.post("/projects.json", pj).Int64("id")
+	pj := j.MustFromString(`{"project":{}}`)
+	pj.MustGet("project").MustSet(projectName, "name").MustSet(int64Str(myId), "people").Set(true, "use-tasks")
+	projectId := rm.post("/projects.json", pj).MustInt64("id")
 	fmt.Println("projectId =", projectId)
 
 	fmt.Println("create tasklist")
-	tasklistId := rm.post(fmt.Sprintf("/projects/%d/tasklists.json", projectId), j.PNew().Set("twtrees", "todo-list", "name")).Int64("TASKLISTID")
+	tasklistId := rm.post(fmt.Sprintf("/projects/%d/tasklists.json", projectId), j.MustNew().MustSet("twtrees", "todo-list", "name")).MustInt64("TASKLISTID")
 	fmt.Println("tasklistId =", tasklistId)
 
 	fmt.Println("create root task")
-	pj = j.PFromString(`{"todo-item":{}}`)
-	pj.Get("todo-item").Set("0", "content").Set(60, "estimated-minutes").Set(todayDateString(), "start-date").Set(tomorrowDateString(), "due-date")
-	rootTaskId := rm.post(fmt.Sprintf("/tasklists/%d/tasks.json", tasklistId), pj).Int64("id")
+	pj = j.MustFromString(`{"todo-item":{}}`)
+	pj.MustGet("todo-item").MustSet("0", "content").MustSet(60, "estimated-minutes").MustSet(todayDateString(), "start-date").MustSet(tomorrowDateString(), "due-date")
+	rootTaskId := rm.post(fmt.Sprintf("/tasklists/%d/tasks.json", tasklistId), pj).MustInt64("id")
 	fmt.Println("rootTaskId =", rootTaskId)
 
 	start := time.Now()
@@ -74,8 +74,8 @@ func main() {
 	fmt.Println("time to create tree (excluding root node)", time.Now().Sub(start))
 
 	start = time.Now()
-	pj = j.PFromString(`{"todo-item":{}}`)
-	pj.Get("todo-item").Set(tomorrowDateString(), "start-date").Set(dayAfterTomorrowDateString(), "due-date").Set(true, "push-subtasks").Set(true, "push-dependents").Set(false, "use-defaults")
+	pj = j.MustFromString(`{"todo-item":{}}`)
+	pj.MustGet("todo-item").MustSet(tomorrowDateString(), "start-date").MustSet(dayAfterTomorrowDateString(), "due-date").MustSet(true, "push-subtasks").MustSet(true, "push-dependents").MustSet(false, "use-defaults")
 	rm.put(fmt.Sprintf("/tasks/%d.json", rootTaskId), pj)
 	fmt.Println("time to push start/due dates", time.Now().Sub(start))
 }
@@ -107,10 +107,10 @@ type twReqMaker struct {
 	projectId string
 }
 
-func (r *twReqMaker) do(method, path string, body *j.PJson) *j.PJson {
+func (r *twReqMaker) do(method, path string, body *j.Json) *j.Json {
 	var re io.Reader
 	if body != nil {
-		re = body.ToReader()
+		re = body.MustToReader()
 	}
 	req, e := http.NewRequest(method, r.inst+path, re)
 	panicIf(e)
@@ -120,18 +120,18 @@ func (r *twReqMaker) do(method, path string, body *j.PJson) *j.PJson {
 	if resp != nil && resp.Body != nil {
 		defer resp.Body.Close()
 	}
-	return j.PFromReadCloser(resp.Body)
+	return j.MustFromReadCloser(resp.Body)
 }
 
-func (r *twReqMaker) post(path string, body *j.PJson) *j.PJson {
+func (r *twReqMaker) post(path string, body *j.Json) *j.Json {
 	return r.do("POST", path, body)
 }
 
-func (r *twReqMaker) put(path string, body *j.PJson) *j.PJson {
+func (r *twReqMaker) put(path string, body *j.Json) *j.Json {
 	return r.do("PUT", path, body)
 }
 
-func (r *twReqMaker) get(path string, body *j.PJson) *j.PJson {
+func (r *twReqMaker) get(path string, body *j.Json) *j.Json {
 	return r.do("GET", path, body)
 }
 
@@ -142,9 +142,9 @@ func createPerfectKaryTree(rm *twReqMaker, tasklistId, parentTaskId, lastUsedNam
 	for i := uint(0); i < k; i++ {
 		lastUsedNameIdx++
 		fmt.Println("creating node", lastUsedNameIdx)
-		pj := j.PFromString(`{"todo-item":{}}`)
-		pj.Get("todo-item").Set(int64Str(lastUsedNameIdx), "content").Set(60, "estimated-minutes").Set(todayDateString(), "start-date").Set(tomorrowDateString(), "due-date").Set(parentTaskId, "parentTaskId")
-		taskId := rm.post(fmt.Sprintf("/tasklists/%d/tasks.json", tasklistId), pj).Int64("id")
+		pj := j.MustFromString(`{"todo-item":{}}`)
+		pj.MustGet("todo-item").MustSet(int64Str(lastUsedNameIdx), "content").MustSet(60, "estimated-minutes").MustSet(todayDateString(), "start-date").MustSet(tomorrowDateString(), "due-date").MustSet(parentTaskId, "parentTaskId")
+		taskId := rm.post(fmt.Sprintf("/tasklists/%d/tasks.json", tasklistId), pj).MustInt64("id")
 		createdTaskIdsInCreationOrder = append(createdTaskIdsInCreationOrder, taskId)
 		lastUsedNameIdx, createdTaskIdsInCreationOrder = createPerfectKaryTree(rm, tasklistId, taskId, lastUsedNameIdx, currentDepth + 1, k, h, createdTaskIdsInCreationOrder)
 	}
