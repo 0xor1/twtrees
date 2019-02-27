@@ -54,7 +54,7 @@ func main() {
 
 	fmt.Println("create project")
 	pj := j.MustFromString(`{"project":{}}`)
-	pj.MustGet("project").MustSet(projectName, "name").MustSet(int64Str(myId), "people").Set(true, "use-tasks")
+	pj.MustGet("project").MustSet(projectName, "name").MustSet(int64Str(myId), "people").MustSet(true, "use-tasks")
 	projectId := rm.post("/projects.json", pj).MustInt64("id")
 	fmt.Println("projectId =", projectId)
 
