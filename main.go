@@ -175,7 +175,7 @@ func twCreatePerfectKaryTree(rm *twReqMaker, tasklistId, parentTaskId, lastUsedN
 	}
 	for i := uint(0); i < k; i++ {
 		lastUsedNameIdx++
-		fmt.Println("creating node", lastUsedNameIdx)
+		fmt.Printf("\rcreating node %d", lastUsedNameIdx)
 		pj := j.MustFromString(`{"todo-item":{}}`)
 		pj.MustGet("todo-item").MustSet("content", int64Str(lastUsedNameIdx)).MustSet("estimated-minutes", 60).MustSet("start-date", todayDateString()).MustSet("due-date", tomorrowDateString()).MustSet("parentTaskId", parentTaskId)
 		taskId := rm.post(fmt.Sprintf("/tasklists/%d/tasks.json", tasklistId), pj).MustInt64("id")
@@ -192,7 +192,7 @@ func treesCreatePerfectKaryTree(api *api.API, projectId, parentId id.Id, lastUse
 	var previousSiblingId *id.Id
 	for i := uint(0); i < k; i++ {
 		lastUsedNameIdx++
-		fmt.Println("creating node", lastUsedNameIdx)
+		fmt.Printf("\rcreating node %d", lastUsedNameIdx)
 		trueVal := true
 		falseVal := false
 		isAbstract := trueVal
